@@ -38,3 +38,61 @@ Este código utiliza visión por computadora y machine learning para detectar la
 
 
   https://drive.google.com/file/d/1UABNFrejHKWzpHJ-56AoUVqfOfwrSZJe/view?usp=sharing
+
+
+
+**CODIGO DEL ARDUINO**
+
+// Pines para cada segmento del display (A, B, C, D, E, F, G, DP)
+const int segmentPins[] = {2, 3, 4, 5, 6, 7, 8, 9}; // A=2, B=3, ..., G=8, DP=9
+// Dígitos del 0 al 9 en representación de 7 segmentos (A-G, sin DP)
+const byte digitPatterns[10] = {
+  B11111100, // 0 (A,B,C,D,E,F encendidos)
+  B01100000, // 1 (B,C encendidos)
+  B11011010, // 2 (A,B,G,E,D encendidos)
+  B11110010, // 3 (A,B,G,C,D encendidos)
+  B01100110, // 4 (F,G,B,C encendidos)
+  B10110110, // 5 (A,F,G,C,D encendidos)
+  B10111110, // 6 (A,F,G,C,D,E encendidos)
+  B11100000, // 7 (A,B,C encendidos)
+  B11111110, // 8 (Todos encendidos)
+  B11110110  // 9 (A,B,C,D,F,G encendidos)
+};
+
+void setup() {
+  Serial.begin(9600);
+  // Configurar pines de los segmentos como salida
+  for (int i = 0; i < 8; i++) {
+    pinMode(segmentPins[i], OUTPUT);
+  }
+  resetDisplay();
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    char receivedChar = Serial.read();
+    if (receivedChar >= '0' && receivedChar <= '9') {
+      int digit = receivedChar - '0';
+      displayDigit(digit);
+    }
+  }
+}
+
+void displayDigit(int digit) {
+  resetDisplay();
+  if (digit >= 0 && digit <= 9) {
+    byte pattern = digitPatterns[digit];
+    // Encender segmentos según el patrón
+    for (int i = 0; i < 7; i++) { // Itera de A a G (sin DP)
+      bool state = bitRead(pattern, 7 - i); // Lee cada bit del patrón
+      digitalWrite(segmentPins[i], state);
+    }
+  }
+}
+
+void resetDisplay() {
+  // Apagar todos los segmentos
+  for (int i = 0; i < 8; i++) {
+    digitalWrite(segmentPins[i], LOW);
+  }
+}
